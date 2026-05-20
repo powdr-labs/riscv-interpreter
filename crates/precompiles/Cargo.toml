@@ -1,0 +1,52 @@
+[package]
+name = "sim-precompiles"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+sim-rv32im = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+# Hashes — only sha2's low-level compress256 is used now; keccak-f is
+# hand-rolled in src/hashes.rs because no crate exposes a 200-byte permutation
+# in a stable enough API. We keep the dep set minimal.
+sha2 = { version = "0.10", features = ["compress"], optional = true }
+
+# Big-int (modular arithmetic)
+num-bigint = { version = "0.4", optional = true }
+num-integer = { version = "0.1", optional = true }
+num-traits = { version = "0.2", optional = true }
+# Used to mirror openvm-circuit's deterministic non_qr sampling. openvm-circuit
+# does `StdRng::from_seed([0u8; 32])` and calls `fill_bytes` until a non-QR is
+# found; we need the same RNG to land on the same value.
+rand = { version = "0.8", default-features = false, features = ["std_rng"], optional = true }
+
+# ECC
+k256 = { version = "0.13", default-features = false, features = ["arithmetic"], optional = true }
+p256 = { version = "0.13", default-features = false, features = ["arithmetic"], optional = true }
+ark-ff = { version = "0.5", default-features = false, optional = true }
+ark-ec = { version = "0.5", default-features = false, optional = true }
+ark-bn254 = { version = "0.5", default-features = false, features = ["curve"], optional = true }
+ark-bls12-381 = { version = "0.5", default-features = false, features = ["curve"], optional = true }
+ark-serialize = { version = "0.5", default-features = false, optional = true }
+
+[dev-dependencies]
+sim-elf = { workspace = true }
+
+[features]
+default = ["hashes", "modular", "ecc", "pairing"]
+hashes = ["dep:sha2"]
+modular = ["dep:num-bigint", "dep:num-integer", "dep:num-traits", "dep:rand"]
+ecc = [
+    "modular",
+    "dep:k256",
+    "dep:p256",
+    "dep:ark-ff",
+    "dep:ark-ec",
+    "dep:ark-bn254",
+    "dep:ark-bls12-381",
+    "dep:ark-serialize",
+]
+pairing = ["ecc"]

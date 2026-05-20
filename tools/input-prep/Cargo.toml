@@ -1,0 +1,43 @@
+# This tool depends on openvm + openvm-stateless-executor purely to convert
+# the bincode-cached witness into the byte stream the guest expects via its
+# hint inputs. It is NOT part of the `sim/` workspace and never linked from
+# the interpreter — the interpreter has zero openvm deps.
+[package]
+name = "openvm-sim-input-prep"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "openvm-sim-input-prep"
+path = "src/main.rs"
+
+[dependencies]
+bincode = { version = "2.0.1", default-features = false, features = ["derive", "alloc", "serde"] }
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+hex = "0.4"
+
+# Pull these in only when explicitly requested — `openvm` and the stateless
+# executor are heavy.
+openvm-stateless-executor = { path = "../../../crates/stateless-executor", default-features = false }
+openvm = { git = "https://github.com/openvm-org/openvm.git", branch = "develop-v2.0.0-rc.1", default-features = false }
+
+[workspace]
+
+[profile.release]
+opt-level = 3
+
+# Inherit the parent workspace's patches so `openvm`/`openvm-stateless-executor`
+# resolve to the same powdr forks the rest of openvm-eth uses.
+[patch."https://github.com/openvm-org/openvm.git"]
+openvm = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-algebra-guest = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-ecc-guest = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-instructions = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-keccak256 = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-pairing = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-platform = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-rv32im-guest = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-sha2 = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+k256 = { git = "https://github.com/powdr-labs/openvm.git", package = "k256", branch = "v2-powdr-beta.2" }
+p256 = { git = "https://github.com/powdr-labs/openvm.git", package = "p256", branch = "v2-powdr-beta.2" }

@@ -1,0 +1,19 @@
+[package]
+name = "openvm-sim"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "openvm-sim"
+path = "src/main.rs"
+
+[dependencies]
+sim-elf = { workspace = true }
+sim-rv32im = { workspace = true }
+sim-precompiles = { workspace = true }
+
+anyhow = { workspace = true }
+clap = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

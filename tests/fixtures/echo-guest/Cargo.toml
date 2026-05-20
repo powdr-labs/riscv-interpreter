@@ -1,0 +1,17 @@
+[package]
+name = "echo-guest"
+version = "0.0.1"
+edition = "2021"
+
+[[bin]]
+name = "echo-guest"
+path = "src/main.rs"
+
+[profile.release]
+lto = true
+panic = "abort"
+opt-level = 3
+strip = false
+
+# Excluded from any workspace
+[workspace]

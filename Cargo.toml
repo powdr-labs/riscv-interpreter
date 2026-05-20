@@ -1,0 +1,29 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/elf",
+    "crates/rv32im",
+    "crates/precompiles",
+    "crates/runner",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+thiserror = "2"
+anyhow = "1"
+elf = "0.7"
+clap = { version = "4", features = ["derive"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+sim-elf = { path = "crates/elf" }
+sim-rv32im = { path = "crates/rv32im" }
+sim-precompiles = { path = "crates/precompiles" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

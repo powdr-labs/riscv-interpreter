@@ -1,0 +1,46 @@
+# Host tool that reuses openvm-stateless-executor's exact code path to
+# print canonical per-transaction gas. Outside the sim/ workspace; depends
+# on openvm.
+[package]
+name = "canonical-gas"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "canonical-gas"
+path = "src/main.rs"
+
+[dependencies]
+bincode = { version = "2.0.1", default-features = false, features = ["derive", "alloc", "serde"] }
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+
+# Bring in the same crates the host-mode reth-benchmark uses.
+openvm-stateless-executor = { path = "../../../crates/stateless-executor", default-features = false }
+reth-evm = { git = "https://github.com/paradigmxyz/reth", tag = "v1.10.2", default-features = false }
+reth-evm-ethereum = { git = "https://github.com/paradigmxyz/reth", tag = "v1.10.2", default-features = false }
+reth-revm = { git = "https://github.com/paradigmxyz/reth", tag = "v1.10.2", default-features = false }
+reth-primitives = { git = "https://github.com/paradigmxyz/reth", tag = "v1.10.2", default-features = false }
+reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", tag = "v1.10.2", default-features = false }
+reth-ethereum-primitives = { git = "https://github.com/paradigmxyz/reth", tag = "v1.10.2", default-features = false }
+openvm-chainspec = { path = "../../../crates/chainspec" }
+alloy-consensus = { version = "1.4.3", default-features = false }
+
+[workspace]
+
+[profile.release]
+opt-level = 3
+
+# Inherit parent workspace patches so the same powdr forks are used.
+[patch."https://github.com/openvm-org/openvm.git"]
+openvm = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-algebra-guest = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-ecc-guest = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-instructions = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-keccak256 = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-pairing = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-platform = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-rv32im-guest = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+openvm-sha2 = { git = "https://github.com/powdr-labs/openvm.git", tag = "v2.0.0-beta.2-powdr" }
+k256 = { git = "https://github.com/powdr-labs/openvm.git", package = "k256", branch = "v2-powdr-beta.2" }
+p256 = { git = "https://github.com/powdr-labs/openvm.git", package = "p256", branch = "v2-powdr-beta.2" }
