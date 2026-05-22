@@ -152,7 +152,7 @@ cargo build --release
 cd "$OPENVM_ETH/sim"
 target/release/openvm-sim run \
     --elf "$OPENVM_ETH/bin/reth-benchmark/elf/openvm-stateless-guest" \
-    --input /tmp/reth_input.bin --max-steps 1_000_000_000_000 --hex
+    --input /tmp/reth_input.bin --max-steps 1000000000000 --hex
 ```
 
 Current state for block 23992138 — the interpreter executes the **entire
