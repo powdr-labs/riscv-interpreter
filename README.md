@@ -80,17 +80,26 @@ Full encoding table:
 
 ## Quickstart
 
+From the repo root:
+
 ```bash
-cd /workspace/sim
 cargo build --release
-cargo test           # 11 tests pass (RV32IM core + INT256 + Keccak-f vector)
+cargo test           # 15 tests pass (RV32IM core + INT256 + Keccak-f vector + modular suite)
 ```
 
 ### Run a tiny test fixture
 
+The guest is `no_std` and builds for `riscv32im-unknown-none-elf` — install
+the target for the pinned nightly once:
+
 ```bash
-cd tests/fixtures/echo-guest && cargo +nightly-2026-01-18 build --release
-cd /workspace/sim
+rustup target add riscv32im-unknown-none-elf --toolchain nightly-2026-01-18
+```
+
+Then build the guest and run it through the interpreter (from the repo root):
+
+```bash
+( cd tests/fixtures/echo-guest && cargo +nightly-2026-01-18 build --release )
 printf '\xde\xad\xbe\xef\x12\x34\x56\x78\xab\xcd\xef\x01\xff\xee\xdd\xcc' > /tmp/echo.bin
 target/release/openvm-sim run \
     --elf tests/fixtures/echo-guest/target/riscv32im-unknown-none-elf/release/echo-guest \
@@ -100,21 +109,49 @@ target/release/openvm-sim run \
 
 ### Run the real Reth stateless-guest
 
+The interpreter itself is standalone, but the helper tools under `tools/`
+(`input-prep`, `canonical-gas`) reach into `openvm-eth`'s workspace via
+relative paths (e.g. `../../../crates/stateless-executor`). The simplest way
+to satisfy that is to check this repo out as `sim/` inside an `openvm-eth`
+checkout:
+
+```
+<openvm-eth>/                # axiom-crypto/openvm-eth checkout
+├── crates/                  # …includes stateless-executor, chainspec, mpt, …
+├── bin/reth-benchmark/elf/openvm-stateless-guest
+├── rpc-cache/input/1/23992138.bin
+└── sim/                     # ← this repository, cloned or worktree-added here
+```
+
+A throwaway way to do that without re-cloning is a detached git worktree:
+
+```bash
+git -C <this-repo> worktree add --detach <openvm-eth>/sim HEAD
+```
+
+With that layout in place, set `OPENVM_ETH` to point at the openvm-eth root:
+
+```bash
+export OPENVM_ETH=$HOME/devel/openvm-eth   # adjust to your checkout
+```
+
+Then:
+
 ```bash
 # (1) Build the input-prep tool — only needed once. This is the only place
 # we touch openvm; the interpreter itself stays clean.
-cd /workspace/sim/tools/input-prep
+cd "$OPENVM_ETH/sim/tools/input-prep"
 cargo build --release
 
 # (2) Convert the cached witness produced by openvm-reth-benchmark.
 ./target/release/openvm-sim-input-prep \
-    --cache /workspace/rpc-cache/input/1/23992138.bin \
+    --cache "$OPENVM_ETH/rpc-cache/input/1/23992138.bin" \
     --out /tmp/reth_input.bin
 
 # (3) Run the guest.
-cd /workspace/sim
+cd "$OPENVM_ETH/sim"
 target/release/openvm-sim run \
-    --elf /workspace/bin/reth-benchmark/elf/openvm-stateless-guest \
+    --elf "$OPENVM_ETH/bin/reth-benchmark/elf/openvm-stateless-guest" \
     --input /tmp/reth_input.bin --max-steps 1_000_000_000_000 --hex
 ```
 
@@ -180,18 +217,19 @@ exactly turned up several non-obvious differences from the upstream
    pushed into the hint stream in the Fq12 flattening order
    `[c0.c0, c1.c0, c0.c1, c1.c1, c0.c2, c1.c2]`.
 
-Verification helper:
+Verification helper (assumes the `openvm-eth/sim` layout and `$OPENVM_ETH`
+described above):
 
 ```bash
 # Get canonical per-tx cumulative gas and block hash from the host-mode
 # StatelessExecutor (uses the same cached witness, no RPC):
-cd sim/tools/canonical-gas
-cargo run --release -- --cache /workspace/rpc-cache/input/1/23992138.bin
+cd "$OPENVM_ETH/sim/tools/canonical-gas"
+cargo run --release -- --cache "$OPENVM_ETH/rpc-cache/input/1/23992138.bin"
 
 # Run the interpreter and compare:
-cd /workspace/sim
+cd "$OPENVM_ETH/sim"
 ./target/release/openvm-sim run \
-    --elf /workspace/bin/reth-benchmark/elf/openvm-stateless-guest \
+    --elf "$OPENVM_ETH/bin/reth-benchmark/elf/openvm-stateless-guest" \
     --input /tmp/reth_input.bin --max-steps 10000000000000 --hex
 ```
 
